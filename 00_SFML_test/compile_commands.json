@@ -1,0 +1,31 @@
+[
+{
+  "directory": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/build",
+  "command": "g++   -I../include -I../libsrc  -O0 -g3 -pthread -fPIE   -Wall -o CMakeFiles/test_New_Project-121212.343456.out.dir/test/test_main.cpp.o -c /home/adrian.ko/00_work/08_SFML/00_SFML_test/test/test_main.cpp",
+  "file": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/test/test_main.cpp"
+},
+
+{
+  "directory": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/build",
+  "command": "g++   -I../include -I../libsrc  -O0 -g3 -pthread -fPIE   -Wall -o CMakeFiles/test_New_Project-121212.343456.out.dir/test/testcase_00.cpp.o -c /home/adrian.ko/00_work/08_SFML/00_SFML_test/test/testcase_00.cpp",
+  "file": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/test/testcase_00.cpp"
+},
+
+{
+  "directory": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/build",
+  "command": "g++  -DNew_Project_EXPORTS  -O0 -g3 -pthread -fPIC   -Wall -o CMakeFiles/New_Project.dir/libsrc/CSceneTree.cpp.o -c /home/adrian.ko/00_work/08_SFML/00_SFML_test/libsrc/CSceneTree.cpp",
+  "file": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/libsrc/CSceneTree.cpp"
+},
+
+{
+  "directory": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/build",
+  "command": "g++  -DNew_Project_EXPORTS  -O0 -g3 -pthread -fPIC   -Wall -o CMakeFiles/New_Project.dir/libsrc/libmodule.cpp.o -c /home/adrian.ko/00_work/08_SFML/00_SFML_test/libsrc/libmodule.cpp",
+  "file": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/libsrc/libmodule.cpp"
+},
+
+{
+  "directory": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/build",
+  "command": "g++   -I../include -I../libsrc  -O0 -g3 -pthread -fPIE   -Wall -o CMakeFiles/New_Project-121212.343456.out.dir/src/main.cpp.o -c /home/adrian.ko/00_work/08_SFML/00_SFML_test/src/main.cpp",
+  "file": "/home/adrian.ko/00_work/08_SFML/00_SFML_test/src/main.cpp"
+}
+]
