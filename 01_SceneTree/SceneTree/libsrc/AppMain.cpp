@@ -1,8 +1,10 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/Transformable.hpp>
+#include <chrono>
 
 #include "CSceneTree.h"
+#include "CButton.h"
 
 sf::RenderWindow& SetupWindow() {
   static sf::RenderWindow window(sf::VideoMode(640, 480), "Scene Tree");
@@ -21,6 +23,11 @@ sf::Font& SetupFont() {
     exit(1);
   }
   return font;
+}
+int Rotate(std::vector<CSceneTree*>& pChildren, sf::Transform& Tf,
+           float &fTimeDelta) {
+  Tf.rotate(10*fTimeDelta);
+  return 0;
 }
 
 int CreateSceneTree(CSceneTree* &pRootNode,
@@ -42,16 +49,17 @@ int CreateSceneTree(CSceneTree* &pRootNode,
   int iButtonWidth = 150;
   int iCenterPos = (vec2uWinSize.x/2.0) - (iButtonWidth/2.0);
   pBtn= new CButton("BTN_Start","Test Start",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,10);
+  pBtn->m_Tf.translate(iCenterPos,110);
+  pBtn->m_OnClick = Rotate;
  
   pUILayer->AddChildNode(pBtn);
  
   pBtn= new CButton("BTN_Option","Option",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,50);
+  pBtn->m_Tf.translate(iCenterPos,150);
   pUILayer->AddChildNode(pBtn);
  
   pBtn= new CButton("BTN_Exit","Exit",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,90);
+  pBtn->m_Tf.translate(iCenterPos,190);
   pUILayer->AddChildNode(pBtn);
 
   printf("\033[1;33m[%s][%d] Tree Structure  \033[m\n",__FUNCTION__,__LINE__);
@@ -70,9 +78,20 @@ int AppMain(int argc, char *argv[]) {
   bool bWindowFocused = false;
   CSceneTree* pRootNode = nullptr;
   CreateSceneTree(pRootNode,window, font);
+
+  auto now  = std::chrono::system_clock::now();
+  auto prev = std::chrono::system_clock::now();
+  std::chrono::duration<float> DeltaTime;
+  float fTimeDelta;
+
   // :x: main loop
   while (window.isOpen())
-  {
+  { 
+    now= std::chrono::system_clock::now();
+    DeltaTime = now - prev;
+    fTimeDelta = DeltaTime.count();
+    prev = now;
+
     while (window.pollEvent(evt)) {
       // window event
       if (evt.type == sf::Event::Closed)
@@ -94,10 +113,10 @@ int AppMain(int argc, char *argv[]) {
 
       // :x: Event
       if (bWindowFocused)
-        pRootNode->evt(evt,sf::Transform::Identity);
+        pRootNode->evt(evt,sf::Transform::Identity,fTimeDelta);
     }
     // :x: Tick
-    //pRootNode->tick(deltaTime,sf::Transform::Identity)
+    //pRootNode->tick(deltaTime,sf::Transform::Identity,fTimeDelta)
 
     // :x: Draw
     window.clear();
