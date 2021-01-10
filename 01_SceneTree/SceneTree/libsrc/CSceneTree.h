@@ -12,7 +12,8 @@ class CNullNode : public sf::Drawable
   }
 
 };
-
+class CSceneTree;
+CSceneTree* GetSceneTreeRoot(); 
 class CSceneTree
 {
   public:
@@ -21,7 +22,7 @@ class CSceneTree
     virtual ~CSceneTree();
 
 
-    void AddChildNode(CSceneTree* pChildNode);
+    int AddChildNode(CSceneTree* pChildNode);
 
     /**
      * @brief recursively release heap memory in child nodes
@@ -29,6 +30,9 @@ class CSceneTree
     void ClearChildNode();
 
     void PrintNodeTree(int iLayerIdx);
+
+    CSceneTree* FindNode(std::string strID,
+                         CSceneTree* baseNode= GetSceneTreeRoot());
 
     void draw(sf::RenderTarget& target, const sf::Transform& parentTf) const;
     
@@ -64,6 +68,8 @@ class CSceneNode : public CSceneTree
     T m_Entity; 
 
 };
+
+void SetSceneTreeRoot(CSceneTree* pRoot); 
 
 
 

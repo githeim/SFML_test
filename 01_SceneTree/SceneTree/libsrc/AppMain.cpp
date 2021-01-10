@@ -64,7 +64,7 @@ int CreateSceneTree(CSceneTree* &pRootNode,
 
   printf("\033[1;33m[%s][%d] Tree Structure  \033[m\n",__FUNCTION__,__LINE__);
   pRootNode->PrintNodeTree(0);
- 
+  SetSceneTreeRoot(pRootNode);
   return 0;
 }
 

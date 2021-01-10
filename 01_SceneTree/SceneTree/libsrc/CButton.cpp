@@ -11,7 +11,6 @@ CButton::CButton(std::string strID,std::string strText,
   pText->m_Entity.setCharacterSize(iFontSize);
   pText->m_Entity.setFillColor(sf::Color::Green);
   sf::FloatRect txtRect = pText->m_Entity.getGlobalBounds();
-  pText->m_Entity.setPosition(-(txtRect.width/2.0), -(txtRect.height/2.0));
 
   // :x: Create Border
   CSceneNode<sf::RectangleShape> *pBorder = 
@@ -29,7 +28,6 @@ CButton::CButton(std::string strID,std::string strText,
   pBorder->AddChildNode(pText);
   this->AddChildNode(pBorder);
   sf::FloatRect borderRect= pBorder->m_Entity.getGlobalBounds();
-  pBorder->m_Entity.setPosition(-(borderRect.width/2.0), -(borderRect.height/2.0));
 
   printf("\033[1;36m[%s][%d] :x: %f %f %f %f  \033[m\n",
       __FUNCTION__,__LINE__,borderRect.left,borderRect.top,

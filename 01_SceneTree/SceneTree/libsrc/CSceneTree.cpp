@@ -1,4 +1,17 @@
 #include "CSceneTree.h"
+
+CSceneTree* g_pSceneTreeRoot = nullptr;
+
+CSceneTree* GetSceneTreeRoot() {
+  return g_pSceneTreeRoot;
+}
+
+void SetSceneTreeRoot(CSceneTree* pRoot) {
+  g_pSceneTreeRoot = pRoot;
+}
+
+
+
 CSceneTree::CSceneTree(std::string strID):m_strID(strID){
   printf("\033[1;36m[%s][%d] :x: Create[%s] \033[m\n",
       __FUNCTION__,__LINE__,m_strID.c_str());
@@ -15,8 +28,16 @@ CSceneTree::~CSceneTree(){
 }
 
 
-void CSceneTree::AddChildNode(CSceneTree* pChildNode) {
+int CSceneTree::AddChildNode(CSceneTree* pChildNode) {
+  // check the duplication
+  if ( FindNode(pChildNode->m_strID,this) != nullptr) {
+    printf("\033[1;36m[%s][%d] :x: Err) Node ID = [%s] is duplicated "
+        "Node ID should be unique\033[m\n",
+        __FUNCTION__,__LINE__,pChildNode->m_strID.c_str());
+    return -1;
+  }
   m_pChildren.push_back(pChildNode);
+  return 0;
 }
 
 /**
@@ -73,3 +94,15 @@ void CSceneTree::evt(sf::Event& evt,const sf::Transform& parentTf,
 
 
 
+CSceneTree* CSceneTree::FindNode(std::string strID,CSceneTree* baseNode) {
+  CSceneTree* pNode;
+  if (m_strID == strID) {
+    return this;
+  }
+  for ( auto pChild : m_pChildren) {
+    pNode =pChild->FindNode(strID,this);
+    if ( pNode != nullptr) 
+      return pNode;
+  }
+  return nullptr;
+}
