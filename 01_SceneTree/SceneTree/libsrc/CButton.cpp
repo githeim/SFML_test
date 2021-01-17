@@ -28,15 +28,7 @@ CButton::CButton(std::string strID,std::string strText,
   pBorder->AddChildNode(pText);
   this->AddChildNode(pBorder);
   sf::FloatRect borderRect= pBorder->m_Entity.getGlobalBounds();
-
-  printf("\033[1;36m[%s][%d] :x: %f %f %f %f  \033[m\n",
-      __FUNCTION__,__LINE__,borderRect.left,borderRect.top,
-      borderRect.width,borderRect.height);
   borderRect= pBorder->m_Entity.getGlobalBounds();
-  printf("\033[1;33m[%s][%d] :x: %f %f %f %f  \033[m\n",
-      __FUNCTION__,__LINE__,borderRect.left,borderRect.top,
-      borderRect.width,borderRect.height);
-
 }
 
 bool CButton::IsHover(sf::Vector2f& vec2fMousePose,sf::Transform& Tf,
@@ -86,7 +78,10 @@ void CButton::onEvt(sf::Event& evt, sf::Transform& Tf,float& fTimeDelta) {
     }
 
   }
-  
 
+}
+
+
+void CButton::onTick(const sf::Transform& Tf,float& fTimeDelta) {
 
 }

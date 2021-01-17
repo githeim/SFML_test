@@ -12,8 +12,16 @@ class CNullNode : public sf::Drawable
   }
 
 };
+
 class CSceneTree;
+
 CSceneTree* GetSceneTreeRoot(); 
+void        SetSceneTreeRoot(CSceneTree* pRoot); 
+
+
+CSceneTree* GetCurrentScene();
+void SetCurrentScene(CSceneTree* pCurrentScene);
+
 class CSceneTree
 {
   public:
@@ -32,18 +40,29 @@ class CSceneTree
     void PrintNodeTree(int iLayerIdx);
 
     CSceneTree* FindNode(std::string strID,
-                         CSceneTree* baseNode= GetSceneTreeRoot());
+                         CSceneTree* pBaseNode= GetSceneTreeRoot());
 
     void draw(sf::RenderTarget& target, const sf::Transform& parentTf) const;
     
     void evt(sf::Event& evt,const sf::Transform& parentTf,float& fTimeDelta);
+    void tick(const sf::Transform& parentTf,float& fTimeDelta);
     sf::Transform m_Tf;
     std::vector<CSceneTree*> m_pChildren;
     std::string m_strID;
+
+    
+    std::function
+      <int(sf::Event&, const sf::Transform&, float&,CSceneTree*)> 
+                                                              m_OnEvt = nullptr;
+    std::function
+      <int(const sf::Transform& , float&,CSceneTree* )> m_OnTick = nullptr;
+
   private:
 
     virtual void onEvt(sf::Event& evt, sf::Transform& Tf,float& fTimeDelta)  =0;
+    virtual void onTick(const sf::Transform& Tf,float& fTimeDelta)  = 0;
     virtual void onDraw(sf::RenderTarget& target, const sf::Transform& Tf) const = 0;
+    
 
 };
 
@@ -63,13 +82,14 @@ class CSceneNode : public CSceneTree
     virtual void onEvt(sf::Event& evt, sf::Transform& Tf,float& fTimeDelta) {
 
     }
+    virtual void onTick(const sf::Transform& Tf,float& fTimeDelta) {
 
+    }
     // type T ; sf::RectangleShapeNode, sf::Text ...
     T m_Entity; 
 
 };
 
-void SetSceneTreeRoot(CSceneTree* pRoot); 
 
 
 

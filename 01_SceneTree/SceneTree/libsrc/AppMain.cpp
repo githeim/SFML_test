@@ -2,9 +2,43 @@
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <chrono>
+#include <math.h>
 
 #include "CSceneTree.h"
 #include "CButton.h"
+#include "CActor.h"
+
+int OnEvtCoordCursor(sf::Event& evt,const sf::Transform& Tf,
+    float& fTimeDelta,CSceneTree* pSceneNode) {
+  if (evt.type == sf::Event::MouseMoved) {
+    CSceneNode<sf::Text> *pTextCoord =(CSceneNode<sf::Text>*)pSceneNode;
+    pTextCoord->m_Tf = sf::Transform::Identity;
+    pTextCoord->m_Tf.translate(evt.mouseMove.x+10,evt.mouseMove.y);
+    std::string strCoord ="x = "+std::to_string(evt.mouseMove.x)+ " y = "+
+                          std::to_string(evt.mouseMove.y) ;
+    pTextCoord->m_Entity.setString(strCoord);
+
+  }
+
+  return 0;
+}
+
+int OnClick_BTN_Test_Start(std::vector<CSceneTree*>& vecChildren, 
+                           sf::Transform& Tf, float& fTimeDelta)
+{
+  printf("\033[1;36m[%s][%d] :x: Click \033[m\n",__FUNCTION__,__LINE__);
+  SetCurrentScene (GetSceneTreeRoot()->FindNode("SCENE_SCENARIO_SELECT"));
+  return 0;
+}
+
+int OnClick_BTN_Back(std::vector<CSceneTree*>& vecChildren, 
+                           sf::Transform& Tf, float& fTimeDelta)
+{
+  printf("\033[1;36m[%s][%d] :x: Click \033[m\n",__FUNCTION__,__LINE__);
+
+  SetCurrentScene (GetSceneTreeRoot()->FindNode("SCENE_MAIN_MENU"));
+  return 0;
+}
 
 sf::RenderWindow& SetupWindow() {
   static sf::RenderWindow window(sf::VideoMode(640, 480), "Scene Tree");
@@ -24,47 +58,239 @@ sf::Font& SetupFont() {
   }
   return font;
 }
-int Rotate(std::vector<CSceneTree*>& pChildren, sf::Transform& Tf,
-           float &fTimeDelta) {
-  Tf.rotate(10*fTimeDelta);
+
+int CreateBtnMenu(CSceneTree* &pMenuNode, std::string strMenuName,
+                  std::string strMenuTitle,
+                  std::vector<std::string> &vecMenuItem,
+                  sf::RenderWindow& window,
+                  sf::Font &font,
+                  int iWidth=200,int iPosX=-1,int iPosY=-1) {
+  // interval between buttons
+  int iHeightInterval = 40;
+
+  // get window size
+  sf::Vector2u vec2uWinSize;
+  vec2uWinSize = window.getSize();
+
+  pMenuNode  = new CSceneNode<CNullNode>("MENU_"+strMenuName); 
+
+  CButton* pBtn;
+  int iMenuPosX = iPosX;
+  int iMenuPosY = iPosY;
+
+  int iButtonWidth = iWidth - ((float)iWidth/4.0f);
+  if (iMenuPosX == -1  && iMenuPosY == -1) {
+    iMenuPosX =(int)( ((float)vec2uWinSize.x/2.0f) - ((float)iButtonWidth/2.0));
+    iMenuPosY = 40;
+  }
+
+  // :x: Create Border
+  CSceneNode<sf::RectangleShape> *pMenuBorder =
+    new CSceneNode<sf::RectangleShape>(strMenuName+std::string("_BORDER"));
+
+  sf::Vector2f vecBorderSize = 
+                { (float)iWidth,(float)(iHeightInterval*(vecMenuItem.size()+2.0f))};
+  pMenuBorder->m_Entity.setSize(vecBorderSize);
+  pMenuBorder->m_Entity.setFillColor(sf::Color(0,40,0));
+  pMenuBorder->m_Entity.setOutlineThickness(1.0f);
+  pMenuBorder->m_Tf.translate(iMenuPosX,1);
+  pMenuNode->AddChildNode(pMenuBorder);
+
+  // :x: Create Text
+  CSceneNode<sf::Text> *pMenuName = 
+    new CSceneNode<sf::Text>(strMenuName+std::string("_TXT"));
+  pMenuName->m_Entity.setFont(font);
+  pMenuName->m_Entity.setString(strMenuTitle);
+  pMenuName->m_Entity.setCharacterSize(20);
+  pMenuName->m_Entity.setFillColor(sf::Color::Yellow);
+  pMenuName->m_Tf.translate(0,5);
+
+  pMenuBorder->AddChildNode(pMenuName);
+  
+  int cnt = 0;
+  for ( auto strItem : vecMenuItem) {
+    pBtn= new CButton("BTN_"+strItem,strItem,window,font,iButtonWidth);
+    if (pBtn == nullptr) {
+      printf("\033[1;31m[%s][%d] :x: ERR] Button creation  \033[m\n",
+          __FUNCTION__,__LINE__);
+      return -1;
+    }
+    //pBtn->m_Tf.translate(iMenuPosX,iMenuPosY+(cnt*iHeightInterval) );
+    pBtn->m_Tf.translate(5,iMenuPosY+(cnt*iHeightInterval) );
+    cnt++;
+    pMenuBorder->AddChildNode(pBtn);
+  }
+
   return 0;
 }
 
+int CreateBaseScene(std::string  strSceneName,
+                    CSceneTree* &pRootScene) {
+  pRootScene  = new CSceneNode<CNullNode>(strSceneName); 
+  CSceneNode<CNullNode>* pSceneNode;
+
+  pSceneNode = new CSceneNode<CNullNode>("UI_LAYER");
+  pRootScene->AddChildNode(pSceneNode);
+
+  pSceneNode = new CSceneNode<CNullNode>("STAGE_LAYER");
+  pRootScene->AddChildNode(pSceneNode);
+ 
+  return 0;
+}
+
+/**
+ * @brief Create select menu template scene
+ *
+ * @param pScene
+ * @param strSceneName
+ * @param strMenuTitle
+ * @param strMenuID
+ * @param vecMenuItem
+ * @param window
+ * @param 
+ *
+ * @return 
+ */
+int CreateTmplScene_Select_Menu(
+    CSceneTree* & pScene,
+    std::string strSceneName,
+    std::string strMenuTitle,
+    std::string strMenuID,
+    std::vector<std::string> &vecMenuItem,
+    sf::RenderWindow& window,sf::Font &font
+    ) {
+  CSceneTree* pUI_LAYER = nullptr;
+  CSceneTree* pMenuNode = nullptr;
+  // Create Scene Node ; MAIN_MENU
+  CreateBaseScene(strSceneName, pScene);
+
+  // Get UI_Layer from pScene
+  pUI_LAYER = pScene->FindNode("UI_LAYER",pScene);
+  if (pUI_LAYER == nullptr) {
+    printf("\033[1;31m[%s][%d] :x: Error \033[m\n",__FUNCTION__,__LINE__);
+    return -1;
+  }
+
+  // Create Button Menu
+  if ( 
+      CreateBtnMenu(pMenuNode,
+                    strMenuID,
+                    strMenuTitle,
+                    vecMenuItem,
+                    window,font)) {
+    printf("\033[1;36m[%s][%d] :x: ERR ] Create BtnMenu \033[m\n",
+        __FUNCTION__,__LINE__);
+    return -1;
+  }
+  // Attach Button Menu to the UI Layer of SCENE_MAIN_MENU
+  pUI_LAYER->AddChildNode(pMenuNode);
+
+  return 0;
+}
+CSceneNode<sf::Text>* CreateCoordCursor(sf::Font &font){
+  // Add Coordination cursor(show coordination)
+  CSceneNode<sf::Text> *pTextCoord =new CSceneNode<sf::Text>("TEXT_COORD_CURSOR");
+  pTextCoord->m_Entity.setFont(font);
+  pTextCoord->m_Entity.setString("COORD");
+  pTextCoord->m_Entity.setCharacterSize(18);
+  pTextCoord->m_Entity.setFillColor(sf::Color::Cyan);
+  pTextCoord->m_Tf.translate(200,300);
+  pTextCoord->m_OnEvt = OnEvtCoordCursor;
+
+  return pTextCoord;
+}
+
+CSceneTree* CreateScene_SCENARIO_SELECT(sf::RenderWindow& window,sf::Font &font) 
+{
+  CSceneTree* pScene = nullptr;
+  std::vector<std::string> vecMenuItem = 
+                       {"SCENARIO1","SCENARIO2","SCENARIO3","SCENARIO4","Back"};
+  CreateTmplScene_Select_Menu(
+      pScene,
+      "SCENE_SCENARIO_SELECT",
+      "Scenario Select",
+      "SCENARIO_SELECT",
+      vecMenuItem,
+      window,font);
+
+  auto BTN_Back = (CButton*)pScene->FindNode("BTN_Back",pScene);
+  BTN_Back->m_OnClick = OnClick_BTN_Back;
+  
+
+  CActor* pActor00 = new CActor("Actor00");
+
+  pScene->FindNode("STAGE_LAYER",pScene)->AddChildNode(pActor00);
+
+  // Add Coordination cursor(show coordination)
+  CSceneNode<sf::Text> *pTextCoord =CreateCoordCursor(font);
+  pScene->FindNode("STAGE_LAYER", pScene)->AddChildNode(pTextCoord);
+
+
+  return pScene;
+}
+CSceneTree* CreateScene_MAIN_MENU(sf::RenderWindow& window,sf::Font &font) {
+  CSceneTree* pScene = nullptr;
+  std::vector<std::string> vecMenuItem;
+  vecMenuItem = {"Test Start","Option","Exit"};
+  CreateTmplScene_Select_Menu(
+      pScene,
+      "SCENE_MAIN_MENU",
+      "Automation test",
+      "MainMenu",
+      vecMenuItem,
+      window,font);
+
+  // Add Button callback
+  auto BTN_Test_Start = (CButton*)pScene->FindNode("BTN_Test_Start",pScene);
+  if (!BTN_Test_Start) {
+    printf("\033[1;31m[%s][%d] :x: Err Can't Find BTN_Test_Start\033[m\n",
+        __FUNCTION__,__LINE__);
+  }
+  BTN_Test_Start->m_OnClick = OnClick_BTN_Test_Start;
+
+  // Add Coordination cursor(show coordination)
+  CSceneNode<sf::Text> *pTextCoord =CreateCoordCursor(font);
+  pScene->FindNode("STAGE_LAYER", pScene)->AddChildNode(pTextCoord);
+
+
+  return pScene;
+}
+/**
+ * @brief create scene tree
+ *
+ * @param pRootNode[OUT]
+ * @param window[IN]
+ * @param font[IN]
+ *
+ * @return 
+ */
 int CreateSceneTree(CSceneTree* &pRootNode,
                     sf::RenderWindow& window,sf::Font &font) {
+
   sf::Vector2u vec2uWinSize;
   vec2uWinSize = window.getSize();
+  CSceneTree* pScene = nullptr;
  
+  std::string strMenuTitle;
+  std::string strMenuID;
+  std::vector<std::string> vecMainMenuItem;
+
+  // Create Root Node
   pRootNode  = new CSceneNode<CNullNode>("Root"); 
-  CSceneNode<CNullNode>* pUILayer;
-
-  pUILayer= new CSceneNode<CNullNode>("UI_LAYER");
-  pRootNode->AddChildNode(pUILayer);
-
-  CSceneNode<CNullNode>* pDispLayer;
-  pDispLayer = new CSceneNode<CNullNode>("DISP_LAYER");
-  pRootNode->AddChildNode(pDispLayer);
- 
-  CButton* pBtn;
-  int iButtonWidth = 150;
-  int iCenterPos = (vec2uWinSize.x/2.0) - (iButtonWidth/2.0);
-  pBtn= new CButton("BTN_Start","Test Start",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,110);
-  pBtn->m_OnClick = Rotate;
- 
-  pUILayer->AddChildNode(pBtn);
- 
-  pBtn= new CButton("BTN_Option","Option",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,150);
-  pUILayer->AddChildNode(pBtn);
- 
-  pBtn= new CButton("BTN_Exit","Exit",window,font,iButtonWidth);
-  pBtn->m_Tf.translate(iCenterPos,190);
-  pUILayer->AddChildNode(pBtn);
-
-  printf("\033[1;33m[%s][%d] Tree Structure  \033[m\n",__FUNCTION__,__LINE__);
-  pRootNode->PrintNodeTree(0);
   SetSceneTreeRoot(pRootNode);
+  
+  if (pRootNode->FindNode("Root") == nullptr) {
+    printf("\033[1;31m[%s][%d] :x: Err \033[m\n",__FUNCTION__,__LINE__);
+    return -1;
+  }
+  std::vector<std::string> vecMenuItem;
+
+  pScene = CreateScene_MAIN_MENU(window, font);
+  pRootNode->AddChildNode(pScene);
+
+  pScene = CreateScene_SCENARIO_SELECT(window,font);
+  pRootNode->AddChildNode(pScene);
+
   return 0;
 }
 
@@ -77,8 +303,16 @@ int AppMain(int argc, char *argv[]) {
 
   bool bWindowFocused = false;
   CSceneTree* pRootNode = nullptr;
+  CSceneTree* pCurrentScene = nullptr;
   CreateSceneTree(pRootNode,window, font);
+  pRootNode->PrintNodeTree(0);
+#if 1 // :x: for test
+   
+  printf("\033[1;32m[%s][%d] :x: %f \033[m\n",__FUNCTION__,__LINE__,atan2(-0.5, -0.5)*180/M_PI);
+#endif // :x: for test
 
+  SetCurrentScene (GetSceneTreeRoot()->FindNode("SCENE_MAIN_MENU"));
+  pCurrentScene = GetCurrentScene();
   auto now  = std::chrono::system_clock::now();
   auto prev = std::chrono::system_clock::now();
   std::chrono::duration<float> DeltaTime;
@@ -87,6 +321,9 @@ int AppMain(int argc, char *argv[]) {
   // :x: main loop
   while (window.isOpen())
   { 
+    if (GetCurrentScene() != pCurrentScene) {
+      pCurrentScene = GetCurrentScene();
+    }
     now= std::chrono::system_clock::now();
     DeltaTime = now - prev;
     fTimeDelta = DeltaTime.count();
@@ -102,6 +339,21 @@ int AppMain(int argc, char *argv[]) {
         printf("\033[1;32m[%s][%d] :x: Quit \033[m\n",__FUNCTION__,__LINE__);
         window.close();
       }
+      if (evt.type == sf::Event::KeyReleased &&
+          evt.key.code == sf::Keyboard::Num1 ) {
+        printf("\033[1;32m[%s][%d] :x: SceneChange \033[m\n",
+            __FUNCTION__,__LINE__);
+        SetCurrentScene(
+            pRootNode->FindNode("SCENE_MAIN_MENU",pRootNode));
+      }
+      if (evt.type == sf::Event::KeyReleased &&
+          evt.key.code == sf::Keyboard::Num2 ) {
+        printf("\033[1;32m[%s][%d] :x: SceneChange \033[m\n",
+            __FUNCTION__,__LINE__);
+        SetCurrentScene(
+            pRootNode->FindNode("SCENE_SCENARIO_SELECT",pRootNode));
+      }
+
       if (evt.type == sf::Event::GainedFocus) {
         bWindowFocused = true;
         printf("\033[1;33m[%s][%d] :x: focus in\033[m\n",__FUNCTION__,__LINE__);
@@ -113,14 +365,18 @@ int AppMain(int argc, char *argv[]) {
 
       // :x: Event
       if (bWindowFocused)
-        pRootNode->evt(evt,sf::Transform::Identity,fTimeDelta);
+       pCurrentScene->evt(evt,sf::Transform::Identity,fTimeDelta);
     }
+    // :x: Event
+    //if (bWindowFocused)
+    //  pCurrentScene->evt(evt,sf::Transform::Identity,fTimeDelta);
+
     // :x: Tick
-    //pRootNode->tick(deltaTime,sf::Transform::Identity,fTimeDelta)
+    pCurrentScene->tick(sf::Transform::Identity,fTimeDelta);
 
     // :x: Draw
     window.clear();
-    pRootNode->draw(window,sf::Transform::Identity);
+    pCurrentScene->draw(window,sf::Transform::Identity);
     window.display();
 
   }

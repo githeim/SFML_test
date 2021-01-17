@@ -17,6 +17,7 @@ class CButton : public CSceneTree
                  CSceneNode<sf::RectangleShape>*pBorder);
 
     virtual void onEvt(sf::Event& evt, sf::Transform& Tf,float& fTimeDelta);
+    void onTick(const sf::Transform& Tf,float& fTimeDelta);
 
     /**
      * @brief Get border of the button 
