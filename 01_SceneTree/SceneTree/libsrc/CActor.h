@@ -39,6 +39,8 @@ class CActor : public CSceneTree {
     m_vec2Pos = {300,400};
 
     m_Tf.translate(m_vec2Pos.x,m_vec2Pos.y);
+
+    m_Tf.rotate(30);
 #if 1 // :x: for test
     printf("\033[1;33m[%s][%d] :x: Matrix \033[m\n",__FUNCTION__,__LINE__);
     const float* pMat = m_Tf.getMatrix();
@@ -64,7 +66,7 @@ class CActor : public CSceneTree {
         __FUNCTION__,__LINE__,point.x,point.y);
 
 
-    m_vec2Target.x= 300;
+    m_vec2Target.x= 600;
     m_vec2Target.y= 400;
   }
   void onEvt(sf::Event& evt, sf::Transform& Tf,float& fTimeDelta) {
@@ -84,8 +86,12 @@ class CActor : public CSceneTree {
         if (m_bFlag_Seek == true) {
           m_bFlag_Seek = false;
           m_vec2Velocity = {0,0};
-        } else
+        } else {
+          printf("\033[1;32m[%s][%d] :x: Start \033[m\n",__FUNCTION__,__LINE__);
+
+          m_chronoStart= std::chrono::system_clock::now();
           m_bFlag_Seek = true;
+        }
       }
 
 
@@ -98,10 +104,13 @@ class CActor : public CSceneTree {
     static float fTvel = 0.0f;
     
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-      m_fAngle-=50*fTimeDelta;
+      m_fAngle+=50*fTimeDelta;
+      printf("\033[1;36m[%s][%d] :x: Angle =%f  \033[m\n",__FUNCTION__,__LINE__,m_fAngle);
+
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-      m_fAngle+=50*fTimeDelta;
+      m_fAngle-=50*fTimeDelta;
+      printf("\033[1;36m[%s][%d] :x: Angle =%f  \033[m\n",__FUNCTION__,__LINE__,m_fAngle);
     }
 
 
@@ -126,7 +135,7 @@ class CActor : public CSceneTree {
       m_vec2Acceleration = m_vec2SteeringForce/m_fMass;
       m_vec2Velocity = m_vec2Velocity + m_vec2Acceleration;
 
-      m_fAngle = atan2(m_vec2Velocity.x, m_vec2Velocity.y)*180/M_PI-90;
+      m_fAngle = -(atan2(m_vec2Velocity.x, m_vec2Velocity.y)*180/M_PI-90);
     }
     m_Tf = sf::Transform::Identity;
     
@@ -134,7 +143,22 @@ class CActor : public CSceneTree {
       printf("\033[1;33m[%s][%d] :x: vel (%f %f) %f \033[m\n",
           __FUNCTION__,__LINE__,m_vec2Velocity.x,m_vec2Velocity.y,m_fAngle);
     }
-    m_Tf.translate(m_vec2Pos+m_vec2Velocity);
+    if (CSteeringBehavior::Length(m_vec2Pos-m_vec2Target) < 4) 
+    {
+      if (m_bFlag_Seek == true) {
+        printf("\033[1;32m[%s][%d] :x: Arrive \033[m\n",__FUNCTION__,__LINE__);
+        m_chronoEnd = std::chrono::system_clock::now();
+        std::chrono::duration<float> diff = m_chronoEnd-m_chronoStart;
+        printf("\033[1;33m[%s][%d] :x: %f seconds elapsed\033[m\n",
+            __FUNCTION__,__LINE__,diff.count());
+
+
+      }
+      m_vec2Velocity = {0,0};
+      m_bFlag_Seek = false;
+
+    }
+    m_Tf.translate(m_vec2Pos+(m_vec2Velocity*fTimeDelta));
     m_Tf.rotate(m_fAngle);
 
 
@@ -149,8 +173,8 @@ class CActor : public CSceneTree {
   
   bool m_bFlag_Seek =false;
 	float m_fOrientation;
-	float m_fMax_force= 5.0;
-	float m_fMax_velocity=5.0;
+	float m_fMax_force= 300.0;
+	float m_fMax_velocity=100.0;
   float m_fMass=50.0;
   float m_fAngle=0;
 
@@ -159,6 +183,8 @@ class CActor : public CSceneTree {
   sf::Vector2f m_vec2Acceleration = {0,0};
   sf::Vector2f m_vec2Pos = {0,0};
 
+   std::chrono::time_point<std::chrono::system_clock> m_chronoStart;
+   std::chrono::time_point<std::chrono::system_clock> m_chronoEnd;
 
 };
 #endif /* ifndef _CACTOR_H_ */
