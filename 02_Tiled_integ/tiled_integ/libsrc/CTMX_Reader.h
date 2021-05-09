@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 #include <SFML/Graphics.hpp>
 
 typedef struct {
@@ -12,6 +13,8 @@ typedef struct {
   std::string strName;
   std::vector<int> vecTileIdx;
   std::string strEncoding;
+  sf::Sprite Sprite;
+  std::shared_ptr<sf::RenderTexture> pRenderTexture;
 } MapLayer;
 
 typedef struct {
@@ -37,12 +40,17 @@ class CTMX_Reader {
 
     bool Read_Ctx(std::string strTMX_Path,std::string strTSX_Path);
     bool Read_TileSet(std::string strTSX_Path);
-    bool Create_Sprites(std::map<int,sf::Sprite> &mapSprites,
-                        sf::Texture &texture,
+    bool Create_Tiles(std::map<int,sf::Sprite> &mapSprites,
+                        sf::Texture &Texture,
                         int iTilewidth, int iTileheight, int iSpacing, 
                         int iMargin, int iTilecount, int iColumns, 
                         int iImgWidth, int iImgHeight );
-  private:
+    int Create_Layers();
+    int Update_Layer(
+        MapLayer &Layer,
+        std::map<std::string,TileSet> &mapTileSets);
+
+//  private:
     std::string m_strTMX_path;
     std::string m_strTSX_path;
 
@@ -52,8 +60,9 @@ class CTMX_Reader {
 
     int m_iTileWidth;
     int m_iTileHeight;
-    std::vector<MapLayer> m_MapLayers;
     std::map<std::string,MapLayer> m_mapLayers;
+
+    std::string m_strCurTileSetName;
     std::map<std::string,TileSet> m_mapTileSets;
 };
 #endif /* ifndef _CTMX_READER_H_ */
