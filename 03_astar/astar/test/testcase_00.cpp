@@ -12,30 +12,38 @@ class Test_AStar : public testing::Test {
   protected:
     virtual void SetUp() {
       TestMap.iStride = 10;
+      TestMap.iHeight = 6;
       TestMap.vecData = 
-      { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0,
-        0, 0, 0, 0, 0, 1, 0, 1, 0, 0,
-        0, 0, 1, 1, 0, 0, 0, 1, 0, 0,
-        0, 0, 0, 1, 1, 1, 0, 0, 0, 1,
-        0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
-        0, 0, 0, 0, 0, 1, 0, 1, 0, 0 };
+      { 
+         0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 
+         0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 
+         0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 
+         0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 
+         0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 
+         0, 0, 0, 0, 0, 1, 0, 1, 0, 0 
+      };
 
     }
     virtual void TearDown() {
     }
 
 };
-#if 1 // :x: for test
+
+#if 0 // :x: for test
 TEST_F(Test_AStar, Test_GetAdjacentNodes) {
   auto vecExpectAdjacents = std::vector<int> {7,8,9,17,19,27,28,29};
   auto vecExpectAvailableAdjacents = std::vector<int> {8,9,19,28,29};
 
   EXPECT_EQ(vecExpectAdjacents,
-            Lambda_GetAdjacentNodes(18, TestMap.iStride));
-//  EXPECT_EQ(vecExpectAdjacents,
-//            Lambda_FilterObstacles(18, TestMap.iStride));
+            Lambda_GetAdjacentNodes(18, TestMap.iStride,TestMap.iHeight));
 
+  // get the vector for filtering
+  std::vector<int> vecFilterIdx = Lambda_GetFilterIdxFromMap(TestMap.vecData);
 
+  EXPECT_EQ(vecExpectAvailableAdjacents,
+      Lambda_FilterObstacles(
+        Lambda_GetAdjacentNodes(18, TestMap.iStride,TestMap.iHeight), vecFilterIdx)
+      );
 }
 #endif // :x: for test
 
@@ -79,8 +87,8 @@ TEST_F(Test_AStar, Test_Queue) {
 
 }
 #endif // :x: for test
-#if 0 // :x: for test
 
+#if 0 // :x: for test
 TEST_F(Test_AStar, Test_Idx_Coord_Exchange) {
   // stride 10
   EXPECT_EQ(std::make_pair(2,1), Lambda_Idx2Coord(12,10));
@@ -96,19 +104,34 @@ TEST_F(Test_AStar, Test_Idx_Coord_Exchange) {
 }
 #endif // :x: for test
 
-#if 0 // :x: for test
+#if 0// :x: for test
 TEST_F(Test_AStar, Test_MapInit) {
 
   std::shared_ptr<CAStar> pAStar =std::make_shared<CAStar> ();
 
   pAStar->SetMap(TestMap);
 
-  auto Start = std::make_pair(1,4);
-  auto Dest = std::make_pair(8,1);
-
+  std::pair<int,int> Start; 
+  std::pair<int,int> Dest ; 
+  Start= std::make_pair(1,4);
+  Dest = std::make_pair(8,1);
   pAStar->SetStart(Start)->SetDest(Dest);
   EXPECT_EQ(std::make_pair(1,4), pAStar->GetStart());
   EXPECT_EQ(std::make_pair(8,1), pAStar->GetDest());
+  pAStar->Exec();
+
+  Start= std::make_pair(3,5);
+  Dest = std::make_pair(9,5);
+
+  pAStar->SetStart(Start)->SetDest(Dest);
+  pAStar->Exec();
+
+  Start= std::make_pair(0,0);
+  Dest = std::make_pair(6,5);
+
+  pAStar->SetStart(Start)->SetDest(Dest);
+  pAStar->Exec();
+
 
 }
 #endif // :x: for test
@@ -122,4 +145,38 @@ TEST_F(Test_AStar, Test_InputMap) {
 }
 #endif // :x: for test
 
+TEST_F(Test_AStar, Test_GetAStarPath) {
+  int iStartIdx;
+  int iDestIdx;
+  std::vector<int> vecPath;
+
+  iStartIdx = Lambda_Coord2Idx(std::make_pair(1,4),TestMap.iStride);
+  iDestIdx  = Lambda_Coord2Idx(std::make_pair(8,1), TestMap.iStride);
+
+  vecPath = Lambda_GetAStarPath(
+      iStartIdx,iDestIdx,TestMap.vecData,TestMap.iStride);
+  EXPECT_TRUE( vecPath.size() != 0 );
+  EXPECT_TRUE( vecPath.back() == iDestIdx );
+
+  vecPath.clear();
+  iStartIdx = Lambda_Coord2Idx(std::make_pair(3,5),TestMap.iStride);
+  iDestIdx  = Lambda_Coord2Idx(std::make_pair(9,5), TestMap.iStride);
+
+  vecPath = Lambda_GetAStarPath(
+      iStartIdx,iDestIdx,TestMap.vecData,TestMap.iStride);
+  EXPECT_TRUE( vecPath.size() != 0 );
+  EXPECT_TRUE( vecPath.back() == iDestIdx );
+
+  // can not reached path case
+  vecPath.clear();
+  iStartIdx = Lambda_Coord2Idx(std::make_pair(0,5),TestMap.iStride);
+  iDestIdx  = Lambda_Coord2Idx(std::make_pair(6,5), TestMap.iStride);
+
+  vecPath = Lambda_GetAStarPath(
+      iStartIdx,iDestIdx,TestMap.vecData,TestMap.iStride);
+  EXPECT_TRUE( vecPath.size() == 0 );
+
+
+  
+}
 
